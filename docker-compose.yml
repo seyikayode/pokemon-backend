@@ -9,7 +9,7 @@ services:
     ports:
       - "80:3001"
     volumes:
-      - db_data:/app/favorites.db
+      - db_data:/usr/src/app/favorites.db
     depends_on:
       - redis
 
