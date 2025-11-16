@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { map, firstValueFrom, catchError } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
@@ -15,15 +16,23 @@ export interface EvolutionStep {
 
 @Injectable()
 export class PokemonService {
-    private readonly POKEAPI_URL = 'https://pokeapi.co/api/v2';
-    private readonly POKEMON_LIST_CACHE_KEY = 'pokemon_list_150';
+    private readonly POKEAPI_URL: string;
+    private readonly POKEMON_LIST_CACHE_KEY: string;
+    private readonly POKEMON_IMAGE_URL: string;
+    private readonly POKEMON_OFFICIAL_IMAGE_URL: string;
 
     constructor(
         private readonly httpService: HttpService,
         @InjectRepository(Favorite)
         private favoriteRepository: Repository<Favorite>,
-        @Inject(CACHE_MANAGER) private cacheManager: Cache
-    ) {}
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+        private readonly configService: ConfigService,
+    ) {
+        this.POKEAPI_URL = this.configService.get<string>('POKEAPI_URL') || '';
+        this.POKEMON_LIST_CACHE_KEY = this.configService.get<string>('POKEMON_LIST_CACHE_KEY') || '';
+        this.POKEMON_IMAGE_URL = this.configService.get<string>('POKEMON_IMAGE_URL') || '';
+        this.POKEMON_OFFICIAL_IMAGE_URL = this.configService.get<string>('POKEMON_OFFICIAL_IMAGE_URL') || '';
+    }
 
     async getFavorites(): Promise<string[]> {
         const favorites = await this.favoriteRepository.find();
@@ -81,7 +90,7 @@ export class PokemonService {
             return {
                 name: pokemon.name,
                 id: numId,
-                image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`
+                image: `${this.POKEMON_OFFICIAL_IMAGE_URL}/${id}.png`
             };
         });
 
@@ -119,7 +128,7 @@ export class PokemonService {
             evolutions.push({
                 name: currentNode.species.name,
                 id: parseInt(id, 10),
-                image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`
+                image: `${this.POKEMON_IMAGE_URL}/${id}.png`
             });
 
             if (currentNode.evolves_to && currentNode.evolves_to.length > 0) {
