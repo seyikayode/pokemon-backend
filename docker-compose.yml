@@ -7,9 +7,9 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "3001:3001"
+      - "80:3001"
     volumes:
-      - db_data:/usr/src/app/favorites.db
+      - db_data:/usr/src/app/db
     depends_on:
       - redis
 

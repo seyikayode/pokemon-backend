@@ -30,12 +30,17 @@ import { PokemonService } from './pokemon/pokemon.service';
       inject: [ConfigService]
     }),
 
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'favorites.db',
-      entities: [Favorite],
-      synchronize: true
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'sqlite',
+        database: configService.get<string>('DATABASE_PATH', 'favorites.db'),
+        entities: [Favorite],
+        synchronize: true
+      }),
+      inject: [ConfigService],
     }),
+
     PokemonModule
   ],
   controllers: [AppController],
